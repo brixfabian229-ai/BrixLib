@@ -406,14 +406,19 @@ function BrixLib:CreateWindow(options)
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
     local minimized = false
-    MinBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 40)}, 0.3, Enum.EasingStyle.Back)
-        else
-            Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 380)}, 0.3, Enum.EasingStyle.Back)
-        end
-    end)
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 40)}, 0.3, Enum.EasingStyle.Back)
+        task.wait(0.1)
+        Sidebar.Visible = false
+        ContentArea.Visible = false
+    else
+        Sidebar.Visible = true
+        ContentArea.Visible = true
+        Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 380)}, 0.3, Enum.EasingStyle.Back)
+    end
+end)
 
     -- Divider under topbar
     local TopDivider = Instance.new("Frame")
