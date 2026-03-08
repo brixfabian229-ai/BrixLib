@@ -143,7 +143,7 @@ function BrixLib:Notify(options)
     local title    = options.Title or "BrixLib"
     local content  = options.Content or ""
     local duration = options.Duration or 4
-    local ntype    = options.Type or "info" -- info, success, warning, error
+    local ntype    = options.Type or "info"
 
     local typeColor = Theme.Accent
     local typeIcon  = "ℹ️"
@@ -209,7 +209,6 @@ function BrixLib:Notify(options)
     ProgressBar.BorderSizePixel = 0
     ProgressBar.Parent = Notif
 
-    -- Slide in
     Tween(Notif, {Position = UDim2.new(0, 0, 0, 0)}, 0.3, Enum.EasingStyle.Back)
     Tween(ProgressBar, {Size = UDim2.new(0, 0, 0, 3)}, duration, Enum.EasingStyle.Linear)
 
@@ -244,14 +243,12 @@ function BrixLib:CreateWindow(options)
     local ConfigFile   = options.ConfigFile or WindowTitle
     local SavedConfig  = LoadConfig(ConfigFolder, ConfigFile)
 
-    -- ScreenGui
     local Gui = Instance.new("ScreenGui")
     Gui.Name = "BrixLib_" .. WindowTitle
     Gui.ResetOnSpawn = false
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = game.CoreGui
 
-    -- Main Window Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 560, 0, 380)
@@ -272,7 +269,6 @@ function BrixLib:CreateWindow(options)
     Sidebar.Parent = MainFrame
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
 
-    -- Fix sidebar right corners
     local SidebarFix = Instance.new("Frame")
     SidebarFix.Size = UDim2.new(0, 20, 1, 0)
     SidebarFix.Position = UDim2.new(1, -20, 0, 0)
@@ -280,7 +276,6 @@ function BrixLib:CreateWindow(options)
     SidebarFix.BorderSizePixel = 0
     SidebarFix.Parent = Sidebar
 
-    -- Logo/Title on sidebar
     local LogoFrame = Instance.new("Frame")
     LogoFrame.Size = UDim2.new(1, 0, 0, 70)
     LogoFrame.BackgroundTransparency = 1
@@ -315,7 +310,6 @@ function BrixLib:CreateWindow(options)
     LogoDivider.BorderSizePixel = 0
     LogoDivider.Parent = Sidebar
 
-    -- Tab list container in sidebar
     local TabList = Instance.new("ScrollingFrame")
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(1, 0, 1, -100)
@@ -338,7 +332,6 @@ function BrixLib:CreateWindow(options)
     TabListPadding.PaddingTop = UDim.new(0, 4)
     TabListPadding.Parent = TabList
 
-    -- Version label at bottom of sidebar
     local VerLabel = Instance.new("TextLabel")
     VerLabel.Size = UDim2.new(1, 0, 0, 20)
     VerLabel.Position = UDim2.new(0, 0, 1, -24)
@@ -357,7 +350,6 @@ function BrixLib:CreateWindow(options)
     ContentArea.BackgroundTransparency = 1
     ContentArea.Parent = MainFrame
 
-    -- Topbar for title + close/minimize
     local TopBar = Instance.new("Frame")
     TopBar.Size = UDim2.new(1, 0, 0, 36)
     TopBar.BackgroundTransparency = 1
@@ -373,7 +365,6 @@ function BrixLib:CreateWindow(options)
     WinTitle.TextXAlignment = Enum.TextXAlignment.Left
     WinTitle.Parent = TopBar
 
-    -- Close Button
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Size = UDim2.new(0, 24, 0, 24)
     CloseBtn.Position = UDim2.new(1, -30, 0.5, -12)
@@ -392,7 +383,6 @@ function BrixLib:CreateWindow(options)
         Gui:Destroy()
     end)
 
-    -- Minimize Button
     local MinBtn = Instance.new("TextButton")
     MinBtn.Size = UDim2.new(0, 24, 0, 24)
     MinBtn.Position = UDim2.new(1, -58, 0.5, -12)
@@ -405,23 +395,27 @@ function BrixLib:CreateWindow(options)
     MinBtn.Parent = TopBar
     Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
 
+    -- ========================
+    -- FIXED MINIMIZE
+    -- ========================
     local minimized = false
     MinBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
         if minimized then
             Sidebar.Visible = false
-            ContentArea.Visible = false
+            TabContainer.Visible = false
+            TopDivider.Visible = false
             Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 40)}, 0.3, Enum.EasingStyle.Back)
         else
             Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 380)}, 0.3, Enum.EasingStyle.Back)
             task.delay(0.25, function()
                 Sidebar.Visible = true
-                ContentArea.Visible = true
+                TabContainer.Visible = true
+                TopDivider.Visible = true
             end)
         end
     end)
 
-    -- Divider under topbar
     local TopDivider = Instance.new("Frame")
     TopDivider.Size = UDim2.new(1, 0, 0, 1)
     TopDivider.Position = UDim2.new(0, 0, 0, 36)
@@ -429,7 +423,6 @@ function BrixLib:CreateWindow(options)
     TopDivider.BorderSizePixel = 0
     TopDivider.Parent = ContentArea
 
-    -- Tabs container (content pages)
     local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
     TabContainer.Size = UDim2.new(1, 0, 1, -42)
@@ -438,20 +431,16 @@ function BrixLib:CreateWindow(options)
     TabContainer.ClipsDescendants = true
     TabContainer.Parent = ContentArea
 
-    -- Make window draggable via sidebar logo
     MakeDraggable(MainFrame, LogoFrame)
     MakeDraggable(MainFrame, TopBar)
 
-    -- Toggle UI with keybind
     Keybinds[ToggleKey] = function()
         Gui.Enabled = not Gui.Enabled
     end
 
-    -- Open animation
     MainFrame.Size = UDim2.new(0, 0, 0, 0)
     Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 380)}, 0.4, Enum.EasingStyle.Back)
 
-    -- Window Object
     local WindowObj = {}
     local Tabs = {}
     local ActiveTab = nil
@@ -475,12 +464,11 @@ function BrixLib:CreateWindow(options)
     function WindowObj:CreateTab(name, icon)
         local TabObj = {}
 
-        -- Tab Button in Sidebar
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = name
         TabBtn.Size = UDim2.new(1, 0, 0, 36)
         TabBtn.BackgroundColor3 = Theme.TabInactive
-        TabBtn.Text = (icon and icon .. "  " or "  ") .. name
+        TabBtn.Text = (icon and icon ~= "" and icon .. "  " or "  ") .. name
         TabBtn.TextColor3 = Theme.TextDark
         TabBtn.TextSize = 12
         TabBtn.Font = Enum.Font.GothamSemibold
@@ -493,7 +481,6 @@ function BrixLib:CreateWindow(options)
         TabPad.PaddingLeft = UDim.new(0, 10)
         TabPad.Parent = TabBtn
 
-        -- Tab Page
         local TabPage = Instance.new("ScrollingFrame")
         TabPage.Name = name .. "_Page"
         TabPage.Size = UDim2.new(1, -8, 1, -8)
@@ -505,6 +492,7 @@ function BrixLib:CreateWindow(options)
         TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabPage.Visible = false
+        TabPage.ClipsDescendants = false  -- allow dropdown overlay
         TabPage.Parent = TabContainer
 
         local PageLayout = Instance.new("UIListLayout")
@@ -624,8 +612,8 @@ function BrixLib:CreateWindow(options)
         -- BUTTON
         -- ========================
         function TabObj:CreateButton(options)
-            local bname     = options.Name or "Button"
-            local callback  = options.Callback or function() end
+            local bname    = options.Name or "Button"
+            local callback = options.Callback or function() end
 
             local BtnFrame = Instance.new("TextButton")
             BtnFrame.Size = UDim2.new(1, 0, 0, 38)
@@ -663,10 +651,10 @@ function BrixLib:CreateWindow(options)
         -- TOGGLE
         -- ========================
         function TabObj:CreateToggle(options)
-            local tname        = options.Name or "Toggle"
-            local default      = options.Default or false
-            local flag         = options.Flag
-            local callback     = options.Callback or function() end
+            local tname    = options.Name or "Toggle"
+            local default  = options.Default or false
+            local flag     = options.Flag
+            local callback = options.Callback or function() end
 
             if flag and SavedConfig[flag] ~= nil then
                 default = SavedConfig[flag]
@@ -692,7 +680,6 @@ function BrixLib:CreateWindow(options)
             TLabel.TextXAlignment = Enum.TextXAlignment.Left
             TLabel.Parent = TFrame
 
-            -- Toggle Switch Background
             local SwitchBG = Instance.new("Frame")
             SwitchBG.Size = UDim2.new(0, 40, 0, 20)
             SwitchBG.Position = UDim2.new(1, -52, 0.5, -10)
@@ -701,7 +688,6 @@ function BrixLib:CreateWindow(options)
             SwitchBG.Parent = TFrame
             Instance.new("UICorner", SwitchBG).CornerRadius = UDim.new(1, 0)
 
-            -- Toggle Knob
             local Knob = Instance.new("Frame")
             Knob.Size = UDim2.new(0, 14, 0, 14)
             Knob.Position = toggled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
@@ -736,13 +722,8 @@ function BrixLib:CreateWindow(options)
             end
 
             local ToggleObj = {}
-            function ToggleObj:Set(value)
-                toggled = value
-                UpdateToggle()
-            end
-            function ToggleObj:Get()
-                return toggled
-            end
+            function ToggleObj:Set(value) toggled = value UpdateToggle() end
+            function ToggleObj:Get() return toggled end
             return ToggleObj
         end
 
@@ -759,9 +740,7 @@ function BrixLib:CreateWindow(options)
             local callback = options.Callback or function() end
             local decimals = options.Decimals or 0
 
-            if flag and SavedConfig[flag] ~= nil then
-                default = SavedConfig[flag]
-            end
+            if flag and SavedConfig[flag] ~= nil then default = SavedConfig[flag] end
 
             local currentValue = default
 
@@ -822,44 +801,29 @@ function BrixLib:CreateWindow(options)
             local sliding = false
 
             local function UpdateSlider(input)
-                local sliderPos = SliderBG.AbsolutePosition.X
+                local sliderPos  = SliderBG.AbsolutePosition.X
                 local sliderSize = SliderBG.AbsoluteSize.X
-                local mouseX = input.Position.X
-                local alpha = math.clamp((mouseX - sliderPos) / sliderSize, 0, 1)
+                local alpha = math.clamp((input.Position.X - sliderPos) / sliderSize, 0, 1)
                 local value = min + (max - min) * alpha
-                if decimals == 0 then
-                    value = math.round(value)
-                else
-                    value = math.floor(value * (10^decimals) + 0.5) / (10^decimals)
-                end
+                value = decimals == 0 and math.round(value) or math.floor(value * (10^decimals) + 0.5) / (10^decimals)
                 currentValue = value
                 SValueLbl.Text = tostring(value) .. " " .. suffix
                 SliderFill.Size = UDim2.new(alpha, 0, 1, 0)
                 SliderKnob.Position = UDim2.new(alpha, 0, 0.5, 0)
-                if flag then
-                    SavedConfig[flag] = value
-                    SaveConfig(ConfigFolder, ConfigFile, SavedConfig)
-                end
+                if flag then SavedConfig[flag] = value SaveConfig(ConfigFolder, ConfigFile, SavedConfig) end
                 callback(value)
             end
 
             SliderBG.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    sliding = true
-                    UpdateSlider(input)
+                    sliding = true UpdateSlider(input)
                 end
             end)
-
             UserInputService.InputChanged:Connect(function(input)
-                if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    UpdateSlider(input)
-                end
+                if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then UpdateSlider(input) end
             end)
-
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    sliding = false
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
             end)
 
             local SliderObj = {}
@@ -872,14 +836,12 @@ function BrixLib:CreateWindow(options)
                 SliderKnob.Position = UDim2.new(alpha, 0, 0.5, 0)
                 callback(value)
             end
-            function SliderObj:Get()
-                return currentValue
-            end
+            function SliderObj:Get() return currentValue end
             return SliderObj
         end
 
         -- ========================
-        -- DROPDOWN
+        -- DROPDOWN (FIXED)
         -- ========================
         function TabObj:CreateDropdown(options)
             local dname    = options.Name or "Dropdown"
@@ -894,15 +856,12 @@ function BrixLib:CreateWindow(options)
                 if multi then selected = type(default) == "table" and default or {default}
                 else selected = default end
             end
-
-            if flag and SavedConfig[flag] ~= nil then
-                selected = SavedConfig[flag]
-            end
+            if flag and SavedConfig[flag] ~= nil then selected = SavedConfig[flag] end
 
             local isOpen = false
-            local maxHeight = math.min(#items * 32 + 8, 150)
+            local maxHeight = math.min(#items * 32 + 8, 160)
 
-            -- Outer frame that expands when open
+            -- Header bar (always visible)
             local DFrame = Instance.new("Frame")
             DFrame.Size = UDim2.new(1, 0, 0, 38)
             DFrame.BackgroundColor3 = Theme.Secondary
@@ -912,15 +871,8 @@ function BrixLib:CreateWindow(options)
             DFrame.Parent = TabPage
             Instance.new("UICorner", DFrame).CornerRadius = UDim.new(0, 8)
 
-            -- Header area (always visible)
-            local DHeader = Instance.new("Frame")
-            DHeader.Size = UDim2.new(1, 0, 0, 38)
-            DHeader.BackgroundTransparency = 1
-            DHeader.ZIndex = 3
-            DHeader.Parent = DFrame
-
             local DLabel = Instance.new("TextLabel")
-            DLabel.Size = UDim2.new(1, -110, 1, 0)
+            DLabel.Size = UDim2.new(1, -120, 1, 0)
             DLabel.Position = UDim2.new(0, 12, 0, 0)
             DLabel.BackgroundTransparency = 1
             DLabel.Text = dname
@@ -928,68 +880,62 @@ function BrixLib:CreateWindow(options)
             DLabel.TextSize = 13
             DLabel.Font = Enum.Font.GothamSemibold
             DLabel.TextXAlignment = Enum.TextXAlignment.Left
-            DLabel.ZIndex = 4
-            DLabel.Parent = DHeader
+            DLabel.ZIndex = 3
+            DLabel.Parent = DFrame
 
             local DArrow = Instance.new("TextLabel")
             DArrow.Size = UDim2.new(0, 20, 1, 0)
-            DArrow.Position = UDim2.new(1, -28, 0, 0)
+            DArrow.Position = UDim2.new(1, -26, 0, 0)
             DArrow.BackgroundTransparency = 1
             DArrow.Text = "▼"
             DArrow.TextColor3 = Theme.Accent
             DArrow.TextSize = 11
             DArrow.Font = Enum.Font.GothamBold
-            DArrow.ZIndex = 4
-            DArrow.Parent = DHeader
+            DArrow.ZIndex = 3
+            DArrow.Parent = DFrame
 
             local DSelectedLbl = Instance.new("TextLabel")
-            DSelectedLbl.Size = UDim2.new(0, 85, 1, 0)
-            DSelectedLbl.Position = UDim2.new(1, -113, 0, 0)
+            DSelectedLbl.Size = UDim2.new(0, 90, 1, 0)
+            DSelectedLbl.Position = UDim2.new(1, -118, 0, 0)
             DSelectedLbl.BackgroundTransparency = 1
             DSelectedLbl.TextColor3 = Theme.TextDisabled
             DSelectedLbl.TextSize = 11
             DSelectedLbl.Font = Enum.Font.Gotham
             DSelectedLbl.TextXAlignment = Enum.TextXAlignment.Right
             DSelectedLbl.TextTruncate = Enum.TextTruncate.AtEnd
-            DSelectedLbl.ZIndex = 4
-            DSelectedLbl.Parent = DHeader
+            DSelectedLbl.ZIndex = 3
+            DSelectedLbl.Parent = DFrame
 
             local function UpdateSelectedText()
                 if multi then
-                    if #selected == 0 then DSelectedLbl.Text = "None"
-                    elseif #selected == 1 then DSelectedLbl.Text = selected[1]
-                    else DSelectedLbl.Text = #selected .. " selected" end
+                    DSelectedLbl.Text = #selected == 0 and "None" or (#selected == 1 and selected[1] or #selected .. " selected")
                 else
                     DSelectedLbl.Text = selected or "None"
                 end
             end
             UpdateSelectedText()
 
-            -- Divider line between header and list
-            local DDivider = Instance.new("Frame")
-            DDivider.Size = UDim2.new(1, -16, 0, 1)
-            DDivider.Position = UDim2.new(0, 8, 0, 38)
-            DDivider.BackgroundColor3 = Theme.Accent
-            DDivider.BorderSizePixel = 0
-            DDivider.BackgroundTransparency = 0.6
-            DDivider.ZIndex = 3
-            DDivider.Visible = false
-            DDivider.Parent = DFrame
-
-            -- Dropdown list (inside DFrame, right below header)
+            -- Dropdown list — parented to DFrame, positioned below it
             local DList = Instance.new("ScrollingFrame")
             DList.Size = UDim2.new(1, 0, 0, 0)
-            DList.Position = UDim2.new(0, 0, 0, 42)
-            DList.BackgroundTransparency = 1
+            DList.Position = UDim2.new(0, 0, 1, 6)  -- directly below the header
+            DList.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
             DList.BorderSizePixel = 0
             DList.ClipsDescendants = true
-            DList.ZIndex = 3
+            DList.ZIndex = 50
             DList.Visible = false
             DList.ScrollBarThickness = 3
             DList.ScrollBarImageColor3 = Theme.Accent
             DList.CanvasSize = UDim2.new(0, 0, 0, 0)
             DList.AutomaticCanvasSize = Enum.AutomaticSize.Y
             DList.Parent = DFrame
+            Instance.new("UICorner", DList).CornerRadius = UDim.new(0, 8)
+
+            local DListStroke = Instance.new("UIStroke")
+            DListStroke.Color = Theme.Accent
+            DListStroke.Thickness = 1
+            DListStroke.Transparency = 0.6
+            DListStroke.Parent = DList
 
             local DListLayout = Instance.new("UIListLayout")
             DListLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -999,15 +945,13 @@ function BrixLib:CreateWindow(options)
             local DListPad = Instance.new("UIPadding")
             DListPad.PaddingTop = UDim.new(0, 4)
             DListPad.PaddingBottom = UDim.new(0, 4)
-            DListPad.PaddingLeft = UDim.new(0, 6)
-            DListPad.PaddingRight = UDim.new(0, 6)
+            DListPad.PaddingLeft = UDim.new(0, 4)
+            DListPad.PaddingRight = UDim.new(0, 4)
             DListPad.Parent = DList
 
             local function isSelected(item)
                 if multi then
-                    for _, v in ipairs(selected) do
-                        if v == item then return true end
-                    end
+                    for _, v in ipairs(selected) do if v == item then return true end end
                     return false
                 else
                     return selected == item
@@ -1019,98 +963,84 @@ function BrixLib:CreateWindow(options)
             for _, item in ipairs(items) do
                 local ItemBtn = Instance.new("TextButton")
                 ItemBtn.Size = UDim2.new(1, 0, 0, 30)
-                ItemBtn.BackgroundColor3 = isSelected(item) and Theme.AccentDark or Color3.fromRGB(30, 30, 30)
+                ItemBtn.BackgroundColor3 = isSelected(item) and Theme.AccentDark or Color3.fromRGB(32, 32, 32)
                 ItemBtn.Text = "  " .. item
                 ItemBtn.TextColor3 = isSelected(item) and Theme.Text or Theme.TextDark
                 ItemBtn.TextSize = 12
                 ItemBtn.Font = Enum.Font.Gotham
                 ItemBtn.TextXAlignment = Enum.TextXAlignment.Left
                 ItemBtn.BorderSizePixel = 0
-                ItemBtn.ZIndex = 4
+                ItemBtn.ZIndex = 51
                 ItemBtn.Parent = DList
                 Instance.new("UICorner", ItemBtn).CornerRadius = UDim.new(0, 6)
 
                 ItemButtons[item] = ItemBtn
 
                 ItemBtn.MouseEnter:Connect(function()
-                    if not isSelected(item) then
-                        Tween(ItemBtn, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.1)
-                    end
+                    if not isSelected(item) then Tween(ItemBtn, {BackgroundColor3 = Color3.fromRGB(40,40,40)}, 0.1) end
                 end)
                 ItemBtn.MouseLeave:Connect(function()
-                    if not isSelected(item) then
-                        Tween(ItemBtn, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}, 0.1)
-                    end
+                    if not isSelected(item) then Tween(ItemBtn, {BackgroundColor3 = Color3.fromRGB(32,32,32)}, 0.1) end
                 end)
 
                 ItemBtn.MouseButton1Click:Connect(function()
                     if multi then
                         local found = false
                         for i, v in ipairs(selected) do
-                            if v == item then table.remove(selected, i); found = true; break end
+                            if v == item then table.remove(selected, i) found = true break end
                         end
                         if not found then table.insert(selected, item) end
-                        ItemBtn.BackgroundColor3 = isSelected(item) and Theme.AccentDark or Color3.fromRGB(30, 30, 30)
+                        ItemBtn.BackgroundColor3 = isSelected(item) and Theme.AccentDark or Color3.fromRGB(32,32,32)
                         ItemBtn.TextColor3 = isSelected(item) and Theme.Text or Theme.TextDark
                     else
                         selected = item
                         for k, btn in pairs(ItemButtons) do
-                            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                            btn.BackgroundColor3 = Color3.fromRGB(32,32,32)
                             btn.TextColor3 = Theme.TextDark
                         end
                         ItemBtn.BackgroundColor3 = Theme.AccentDark
                         ItemBtn.TextColor3 = Theme.Text
-                        -- Auto close single select
+                        -- auto close on single select
                         isOpen = false
-                        DDivider.Visible = false
-                        DList.Visible = false
                         Tween(DList, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
                         Tween(DArrow, {Rotation = 0}, 0.15)
-                        Tween(DFrame, {Size = UDim2.new(1, 0, 0, 38)}, 0.2)
+                        DFrame.Size = UDim2.new(1, 0, 0, 38)
+                        task.delay(0.15, function() DList.Visible = false end)
                     end
                     UpdateSelectedText()
-                    if flag then
-                        SavedConfig[flag] = selected
-                        SaveConfig(ConfigFolder, ConfigFile, SavedConfig)
-                    end
+                    if flag then SavedConfig[flag] = selected SaveConfig(ConfigFolder, ConfigFile, SavedConfig) end
                     callback(selected)
                 end)
             end
 
-            -- Click button over header
             local DBtn = Instance.new("TextButton")
-            DBtn.Size = UDim2.new(1, 0, 0, 38)
+            DBtn.Size = UDim2.new(1, 0, 1, 0)
             DBtn.BackgroundTransparency = 1
             DBtn.Text = ""
-            DBtn.ZIndex = 5
+            DBtn.ZIndex = 4
             DBtn.Parent = DFrame
 
             DBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
                 if isOpen then
-                    DDivider.Visible = true
                     DList.Visible = true
                     DList.Size = UDim2.new(1, 0, 0, 0)
-                    Tween(DFrame, {Size = UDim2.new(1, 0, 0, 38 + 4 + maxHeight)}, 0.2, Enum.EasingStyle.Quad)
-                    Tween(DList, {Size = UDim2.new(1, 0, 0, maxHeight)}, 0.2, Enum.EasingStyle.Quad)
+                    Tween(DList, {Size = UDim2.new(1, 0, 0, maxHeight)}, 0.2, Enum.EasingStyle.Back)
                     Tween(DArrow, {Rotation = 180}, 0.2)
+                    DFrame.Size = UDim2.new(1, 0, 0, 38 + maxHeight + 6)
                 else
                     Tween(DList, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
                     Tween(DArrow, {Rotation = 0}, 0.15)
-                    Tween(DFrame, {Size = UDim2.new(1, 0, 0, 38)}, 0.2)
-                    task.delay(0.15, function()
-                        DDivider.Visible = false
-                        DList.Visible = false
-                    end)
+                    DFrame.Size = UDim2.new(1, 0, 0, 38)
+                    task.delay(0.15, function() DList.Visible = false end)
                 end
             end)
 
             local DropObj = {}
             function DropObj:Set(value)
-                if multi then selected = type(value) == "table" and value or {value}
-                else selected = value end
+                selected = multi and (type(value) == "table" and value or {value}) or value
                 for k, btn in pairs(ItemButtons) do
-                    btn.BackgroundColor3 = isSelected(k) and Theme.AccentDark or Color3.fromRGB(30, 30, 30)
+                    btn.BackgroundColor3 = isSelected(k) and Theme.AccentDark or Color3.fromRGB(32,32,32)
                     btn.TextColor3 = isSelected(k) and Theme.Text or Theme.TextDark
                 end
                 UpdateSelectedText()
@@ -1172,30 +1102,18 @@ function BrixLib:CreateWindow(options)
             IStroke.Thickness = 1
             IStroke.Parent = IBox
 
-            IBox.Focused:Connect(function()
-                Tween(IStroke, {Color = Theme.Accent}, 0.15)
-            end)
+            IBox.Focused:Connect(function() Tween(IStroke, {Color = Theme.Accent}, 0.15) end)
             IBox.FocusLost:Connect(function(enterPressed)
                 Tween(IStroke, {Color = Theme.Divider}, 0.15)
-                if flag then
-                    SavedConfig[flag] = IBox.Text
-                    SaveConfig(ConfigFolder, ConfigFile, SavedConfig)
-                end
+                if flag then SavedConfig[flag] = IBox.Text SaveConfig(ConfigFolder, ConfigFile, SavedConfig) end
                 callback(IBox.Text, enterPressed)
             end)
 
-            if flag and SavedConfig[flag] then
-                IBox.Text = SavedConfig[flag]
-            end
+            if flag and SavedConfig[flag] then IBox.Text = SavedConfig[flag] end
 
             local InputObj = {}
-            function InputObj:Set(value)
-                IBox.Text = value
-                callback(value, false)
-            end
-            function InputObj:Get()
-                return IBox.Text
-            end
+            function InputObj:Set(value) IBox.Text = value callback(value, false) end
+            function InputObj:Get() return IBox.Text end
             return InputObj
         end
 
@@ -1212,9 +1130,7 @@ function BrixLib:CreateWindow(options)
             local listening = false
 
             if flag and SavedConfig[flag] then
-                pcall(function()
-                    currentKey = Enum.KeyCode[SavedConfig[flag]]
-                end)
+                pcall(function() currentKey = Enum.KeyCode[SavedConfig[flag]] end)
             end
 
             local KFrame = Instance.new("Frame")
@@ -1263,10 +1179,7 @@ function BrixLib:CreateWindow(options)
                     Keybinds[currentKey] = callback
                     KBtn.Text = input.KeyCode.Name
                     KBtn.TextColor3 = Theme.Accent
-                    if flag then
-                        SavedConfig[flag] = input.KeyCode.Name
-                        SaveConfig(ConfigFolder, ConfigFile, SavedConfig)
-                    end
+                    if flag then SavedConfig[flag] = input.KeyCode.Name SaveConfig(ConfigFolder, ConfigFile, SavedConfig) end
                 end
             end)
         end
@@ -1316,7 +1229,6 @@ function BrixLib:CreateWindow(options)
             Instance.new("UICorner", ColorPreview).CornerRadius = UDim.new(0, 6)
             Instance.new("UIStroke", ColorPreview).Color = Theme.Divider
 
-            -- Simple RGB sliders popup
             local PickerFrame = Instance.new("Frame")
             PickerFrame.Size = UDim2.new(1, 0, 0, 0)
             PickerFrame.Position = UDim2.new(0, 0, 1, 4)
@@ -1329,7 +1241,7 @@ function BrixLib:CreateWindow(options)
             Instance.new("UICorner", PickerFrame).CornerRadius = UDim.new(0, 8)
 
             local pickerOpen = false
-            local r, g, b = math.round(currentColor.R * 255), math.round(currentColor.G * 255), math.round(currentColor.B * 255)
+            local r, g, b = math.round(currentColor.R*255), math.round(currentColor.G*255), math.round(currentColor.B*255)
 
             local function MakeRGBSlider(label, initVal, yPos, onchange)
                 local lbl = Instance.new("TextLabel")
@@ -1353,7 +1265,7 @@ function BrixLib:CreateWindow(options)
                 Instance.new("UICorner", sldBG).CornerRadius = UDim.new(1, 0)
 
                 local sldFill = Instance.new("Frame")
-                sldFill.Size = UDim2.new(initVal / 255, 0, 1, 0)
+                sldFill.Size = UDim2.new(initVal/255, 0, 1, 0)
                 sldFill.BackgroundColor3 = Theme.Accent
                 sldFill.BorderSizePixel = 0
                 sldFill.ZIndex = 10
@@ -1363,8 +1275,8 @@ function BrixLib:CreateWindow(options)
                 local sldKnob = Instance.new("Frame")
                 sldKnob.Size = UDim2.new(0, 12, 0, 12)
                 sldKnob.AnchorPoint = Vector2.new(0.5, 0.5)
-                sldKnob.Position = UDim2.new(initVal / 255, 0, 0.5, 0)
-                sldKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                sldKnob.Position = UDim2.new(initVal/255, 0, 0.5, 0)
+                sldKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
                 sldKnob.BorderSizePixel = 0
                 sldKnob.ZIndex = 11
                 sldKnob.Parent = sldBG
@@ -1384,9 +1296,7 @@ function BrixLib:CreateWindow(options)
 
                 local sliding2 = false
                 sldBG.InputBegan:Connect(function(inp)
-                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                        sliding2 = true
-                    end
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then sliding2 = true end
                 end)
                 UserInputService.InputChanged:Connect(function(inp)
                     if sliding2 and inp.UserInputType == Enum.UserInputType.MouseMovement then
@@ -1399,23 +1309,18 @@ function BrixLib:CreateWindow(options)
                     end
                 end)
                 UserInputService.InputEnded:Connect(function(inp)
-                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                        sliding2 = false
-                    end
+                    if inp.UserInputType == Enum.UserInputType.MouseButton1 then sliding2 = false end
                 end)
             end
 
             local function UpdateColor()
                 currentColor = Color3.fromRGB(r, g, b)
                 ColorPreview.BackgroundColor3 = currentColor
-                if flag then
-                    SavedConfig[flag] = {R = r, G = g, B = b}
-                    SaveConfig(ConfigFolder, ConfigFile, SavedConfig)
-                end
+                if flag then SavedConfig[flag] = {R=r, G=g, B=b} SaveConfig(ConfigFolder, ConfigFile, SavedConfig) end
                 callback(currentColor)
             end
 
-            MakeRGBSlider("R", r, 8, function(val) r = val UpdateColor() end)
+            MakeRGBSlider("R", r, 8,  function(val) r = val UpdateColor() end)
             MakeRGBSlider("G", g, 36, function(val) g = val UpdateColor() end)
             MakeRGBSlider("B", b, 64, function(val) b = val UpdateColor() end)
 
@@ -1434,22 +1339,17 @@ function BrixLib:CreateWindow(options)
             local CPObj = {}
             function CPObj:Set(color)
                 currentColor = color
-                r = math.round(color.R * 255)
-                g = math.round(color.G * 255)
-                b = math.round(color.B * 255)
+                r, g, b = math.round(color.R*255), math.round(color.G*255), math.round(color.B*255)
                 ColorPreview.BackgroundColor3 = color
                 callback(color)
             end
-            function CPObj:Get()
-                return currentColor
-            end
+            function CPObj:Get() return currentColor end
             return CPObj
         end
 
         return TabObj
     end
 
-    -- Notify shortcut
     function WindowObj:Notify(options)
         BrixLib:Notify(options)
     end
