@@ -409,9 +409,15 @@ function BrixLib:CreateWindow(options)
     MinBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
         if minimized then
+            Sidebar.Visible = false
+            ContentArea.Visible = false
             Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 40)}, 0.3, Enum.EasingStyle.Back)
         else
             Tween(MainFrame, {Size = UDim2.new(0, 560, 0, 380)}, 0.3, Enum.EasingStyle.Back)
+            task.delay(0.25, function()
+                Sidebar.Visible = true
+                ContentArea.Visible = true
+            end)
         end
     end)
 
@@ -894,18 +900,27 @@ function BrixLib:CreateWindow(options)
             end
 
             local isOpen = false
+            local maxHeight = math.min(#items * 32 + 8, 150)
 
+            -- Outer frame that expands when open
             local DFrame = Instance.new("Frame")
             DFrame.Size = UDim2.new(1, 0, 0, 38)
             DFrame.BackgroundColor3 = Theme.Secondary
             DFrame.BorderSizePixel = 0
             DFrame.ClipsDescendants = false
-            DFrame.ZIndex = 5
+            DFrame.ZIndex = 2
             DFrame.Parent = TabPage
             Instance.new("UICorner", DFrame).CornerRadius = UDim.new(0, 8)
 
+            -- Header area (always visible)
+            local DHeader = Instance.new("Frame")
+            DHeader.Size = UDim2.new(1, 0, 0, 38)
+            DHeader.BackgroundTransparency = 1
+            DHeader.ZIndex = 3
+            DHeader.Parent = DFrame
+
             local DLabel = Instance.new("TextLabel")
-            DLabel.Size = UDim2.new(1, -50, 1, 0)
+            DLabel.Size = UDim2.new(1, -110, 1, 0)
             DLabel.Position = UDim2.new(0, 12, 0, 0)
             DLabel.BackgroundTransparency = 1
             DLabel.Text = dname
@@ -913,66 +928,79 @@ function BrixLib:CreateWindow(options)
             DLabel.TextSize = 13
             DLabel.Font = Enum.Font.GothamSemibold
             DLabel.TextXAlignment = Enum.TextXAlignment.Left
-            DLabel.ZIndex = 5
-            DLabel.Parent = DFrame
+            DLabel.ZIndex = 4
+            DLabel.Parent = DHeader
 
             local DArrow = Instance.new("TextLabel")
-            DArrow.Size = UDim2.new(0, 30, 1, 0)
-            DArrow.Position = UDim2.new(1, -38, 0, 0)
+            DArrow.Size = UDim2.new(0, 20, 1, 0)
+            DArrow.Position = UDim2.new(1, -28, 0, 0)
             DArrow.BackgroundTransparency = 1
             DArrow.Text = "▼"
             DArrow.TextColor3 = Theme.Accent
             DArrow.TextSize = 11
             DArrow.Font = Enum.Font.GothamBold
-            DArrow.ZIndex = 5
-            DArrow.Parent = DFrame
+            DArrow.ZIndex = 4
+            DArrow.Parent = DHeader
 
-            -- Selected display
             local DSelectedLbl = Instance.new("TextLabel")
-            DSelectedLbl.Size = UDim2.new(1, -50, 1, 0)
-            DSelectedLbl.Position = UDim2.new(0, 12, 0, 0)
+            DSelectedLbl.Size = UDim2.new(0, 85, 1, 0)
+            DSelectedLbl.Position = UDim2.new(1, -113, 0, 0)
             DSelectedLbl.BackgroundTransparency = 1
             DSelectedLbl.TextColor3 = Theme.TextDisabled
             DSelectedLbl.TextSize = 11
             DSelectedLbl.Font = Enum.Font.Gotham
             DSelectedLbl.TextXAlignment = Enum.TextXAlignment.Right
-            DSelectedLbl.ZIndex = 5
-            DSelectedLbl.Parent = DFrame
+            DSelectedLbl.TextTruncate = Enum.TextTruncate.AtEnd
+            DSelectedLbl.ZIndex = 4
+            DSelectedLbl.Parent = DHeader
 
             local function UpdateSelectedText()
                 if multi then
-                    if #selected == 0 then
-                        DSelectedLbl.Text = "None"
-                    elseif #selected == 1 then
-                        DSelectedLbl.Text = selected[1]
-                    else
-                        DSelectedLbl.Text = #selected .. " selected"
-                    end
+                    if #selected == 0 then DSelectedLbl.Text = "None"
+                    elseif #selected == 1 then DSelectedLbl.Text = selected[1]
+                    else DSelectedLbl.Text = #selected .. " selected" end
                 else
                     DSelectedLbl.Text = selected or "None"
                 end
             end
             UpdateSelectedText()
 
-            -- Dropdown List
-            local DList = Instance.new("Frame")
+            -- Divider line between header and list
+            local DDivider = Instance.new("Frame")
+            DDivider.Size = UDim2.new(1, -16, 0, 1)
+            DDivider.Position = UDim2.new(0, 8, 0, 38)
+            DDivider.BackgroundColor3 = Theme.Accent
+            DDivider.BorderSizePixel = 0
+            DDivider.BackgroundTransparency = 0.6
+            DDivider.ZIndex = 3
+            DDivider.Visible = false
+            DDivider.Parent = DFrame
+
+            -- Dropdown list (inside DFrame, right below header)
+            local DList = Instance.new("ScrollingFrame")
             DList.Size = UDim2.new(1, 0, 0, 0)
-            DList.Position = UDim2.new(0, 0, 1, 4)
-            DList.BackgroundColor3 = Theme.Secondary
+            DList.Position = UDim2.new(0, 0, 0, 42)
+            DList.BackgroundTransparency = 1
             DList.BorderSizePixel = 0
             DList.ClipsDescendants = true
-            DList.ZIndex = 10
+            DList.ZIndex = 3
             DList.Visible = false
+            DList.ScrollBarThickness = 3
+            DList.ScrollBarImageColor3 = Theme.Accent
+            DList.CanvasSize = UDim2.new(0, 0, 0, 0)
+            DList.AutomaticCanvasSize = Enum.AutomaticSize.Y
             DList.Parent = DFrame
-            Instance.new("UICorner", DList).CornerRadius = UDim.new(0, 8)
 
             local DListLayout = Instance.new("UIListLayout")
             DListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            DListLayout.Padding = UDim.new(0, 2)
             DListLayout.Parent = DList
 
             local DListPad = Instance.new("UIPadding")
             DListPad.PaddingTop = UDim.new(0, 4)
             DListPad.PaddingBottom = UDim.new(0, 4)
+            DListPad.PaddingLeft = UDim.new(0, 6)
+            DListPad.PaddingRight = UDim.new(0, 6)
             DListPad.Parent = DList
 
             local function isSelected(item)
@@ -990,8 +1018,7 @@ function BrixLib:CreateWindow(options)
 
             for _, item in ipairs(items) do
                 local ItemBtn = Instance.new("TextButton")
-                ItemBtn.Size = UDim2.new(1, -8, 0, 30)
-                ItemBtn.Position = UDim2.new(0, 4, 0, 0)
+                ItemBtn.Size = UDim2.new(1, 0, 0, 30)
                 ItemBtn.BackgroundColor3 = isSelected(item) and Theme.AccentDark or Color3.fromRGB(30, 30, 30)
                 ItemBtn.Text = "  " .. item
                 ItemBtn.TextColor3 = isSelected(item) and Theme.Text or Theme.TextDark
@@ -999,21 +1026,28 @@ function BrixLib:CreateWindow(options)
                 ItemBtn.Font = Enum.Font.Gotham
                 ItemBtn.TextXAlignment = Enum.TextXAlignment.Left
                 ItemBtn.BorderSizePixel = 0
-                ItemBtn.ZIndex = 11
+                ItemBtn.ZIndex = 4
                 ItemBtn.Parent = DList
                 Instance.new("UICorner", ItemBtn).CornerRadius = UDim.new(0, 6)
 
                 ItemButtons[item] = ItemBtn
 
+                ItemBtn.MouseEnter:Connect(function()
+                    if not isSelected(item) then
+                        Tween(ItemBtn, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.1)
+                    end
+                end)
+                ItemBtn.MouseLeave:Connect(function()
+                    if not isSelected(item) then
+                        Tween(ItemBtn, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}, 0.1)
+                    end
+                end)
+
                 ItemBtn.MouseButton1Click:Connect(function()
                     if multi then
                         local found = false
                         for i, v in ipairs(selected) do
-                            if v == item then
-                                table.remove(selected, i)
-                                found = true
-                                break
-                            end
+                            if v == item then table.remove(selected, i); found = true; break end
                         end
                         if not found then table.insert(selected, item) end
                         ItemBtn.BackgroundColor3 = isSelected(item) and Theme.AccentDark or Color3.fromRGB(30, 30, 30)
@@ -1026,6 +1060,13 @@ function BrixLib:CreateWindow(options)
                         end
                         ItemBtn.BackgroundColor3 = Theme.AccentDark
                         ItemBtn.TextColor3 = Theme.Text
+                        -- Auto close single select
+                        isOpen = false
+                        DDivider.Visible = false
+                        DList.Visible = false
+                        Tween(DList, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
+                        Tween(DArrow, {Rotation = 0}, 0.15)
+                        Tween(DFrame, {Size = UDim2.new(1, 0, 0, 38)}, 0.2)
                     end
                     UpdateSelectedText()
                     if flag then
@@ -1036,37 +1077,38 @@ function BrixLib:CreateWindow(options)
                 end)
             end
 
-            local totalHeight = #items * 30 + 8
-            local maxHeight = math.min(totalHeight, 150)
-
+            -- Click button over header
             local DBtn = Instance.new("TextButton")
-            DBtn.Size = UDim2.new(1, 0, 1, 0)
+            DBtn.Size = UDim2.new(1, 0, 0, 38)
             DBtn.BackgroundTransparency = 1
             DBtn.Text = ""
-            DBtn.ZIndex = 6
+            DBtn.ZIndex = 5
             DBtn.Parent = DFrame
 
             DBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
-                DList.Visible = isOpen
                 if isOpen then
-                    Tween(DList, {Size = UDim2.new(1, 0, 0, maxHeight)}, 0.2, Enum.EasingStyle.Back)
+                    DDivider.Visible = true
+                    DList.Visible = true
+                    DList.Size = UDim2.new(1, 0, 0, 0)
+                    Tween(DFrame, {Size = UDim2.new(1, 0, 0, 38 + 4 + maxHeight)}, 0.2, Enum.EasingStyle.Quad)
+                    Tween(DList, {Size = UDim2.new(1, 0, 0, maxHeight)}, 0.2, Enum.EasingStyle.Quad)
                     Tween(DArrow, {Rotation = 180}, 0.2)
-                    DFrame.Size = UDim2.new(1, 0, 0, 38 + maxHeight + 4)
                 else
                     Tween(DList, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
                     Tween(DArrow, {Rotation = 0}, 0.15)
-                    DFrame.Size = UDim2.new(1, 0, 0, 38)
+                    Tween(DFrame, {Size = UDim2.new(1, 0, 0, 38)}, 0.2)
+                    task.delay(0.15, function()
+                        DDivider.Visible = false
+                        DList.Visible = false
+                    end)
                 end
             end)
 
             local DropObj = {}
             function DropObj:Set(value)
-                if multi then
-                    selected = type(value) == "table" and value or {value}
-                else
-                    selected = value
-                end
+                if multi then selected = type(value) == "table" and value or {value}
+                else selected = value end
                 for k, btn in pairs(ItemButtons) do
                     btn.BackgroundColor3 = isSelected(k) and Theme.AccentDark or Color3.fromRGB(30, 30, 30)
                     btn.TextColor3 = isSelected(k) and Theme.Text or Theme.TextDark
@@ -1074,9 +1116,7 @@ function BrixLib:CreateWindow(options)
                 UpdateSelectedText()
                 callback(selected)
             end
-            function DropObj:Get()
-                return selected
-            end
+            function DropObj:Get() return selected end
             return DropObj
         end
 
